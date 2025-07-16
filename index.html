@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Malla Curricular QFB BUAP</title>
   <style>
     body {
@@ -37,7 +37,7 @@
       cursor: pointer;
       position: relative;
       font-size: 0.9em;
-      background-color: #dbeafe; /* Azul claro por defecto */
+      background-color: #dbeafe;
     }
     .subject[data-type="formacion"] { background: #fde68a; }
     .subject[data-type="basica"] { background: #bbf7d0; }
@@ -62,6 +62,7 @@
       white-space: pre;
       font-size: 0.75em;
       display: none;
+      z-index: 10;
     }
     .subject.locked:hover::after {
       display: block;
@@ -102,7 +103,7 @@
       }
     ];
 
-    const completadas = JSON.parse(localStorage.getItem('materias_aprobadas') || '[]');
+    let completadas = JSON.parse(localStorage.getItem('materias_aprobadas') || '[]');
 
     function renderMalla() {
       const contenedor = document.getElementById('malla');
@@ -116,7 +117,7 @@
         sem.materias.forEach(mat => {
           const div = document.createElement('div');
           div.className = 'subject';
-          div.textContent = `${mat.nombre} (${mat.codigo})`;
+          div.textContent = `${mat.nombre} (${mat.codigo}) - ${mat.creditos} créditos`;
           div.setAttribute('data-type', mat.tipo);
           if (completadas.includes(mat.codigo)) div.classList.add('completed');
 
@@ -124,8 +125,7 @@
             const faltan = mat.prerequisitos.filter(pr => !completadas.includes(pr));
             if (faltan.length > 0) {
               div.classList.add('locked');
-              div.setAttribute('data-tooltip', 'Faltan:
-' + faltan.join('\n'));
+              div.setAttribute('data-tooltip', 'Faltan:\n' + faltan.join('\n'));
             }
           }
 
