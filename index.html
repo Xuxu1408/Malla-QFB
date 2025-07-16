@@ -1,17 +1,154 @@
-...
-      'OPT III': { nombre: 'Optativa III', tipo: 'tipo-formativa', semestre: 8 },
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Malla Curricular QFB BUAP</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .grid {
+      display: flex;
+      gap: 10px;
+      overflow-x: auto;
+    }
+    .semester {
+      flex: 0 0 250px;
+      background: #fff;
+      padding: 10px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    .semester h2 {
+      text-align: center;
+      font-size: 1.2em;
+    }
+    .subject {
+      margin: 10px 0;
+      padding: 8px;
+      border-radius: 8px;
+      cursor: pointer;
+      position: relative;
+      font-size: 0.9em;
+      background-color: #dbeafe; /* Azul claro por defecto */
+    }
+    .subject[data-type="formacion"] { background: #fde68a; }
+    .subject[data-type="basica"] { background: #bbf7d0; }
+    .subject[data-type="general"] { background: #a5f3fc; }
+    .subject.completed {
+      text-decoration: line-through;
+      background-color: #cbd5e1 !important;
+    }
+    .subject.locked {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    .subject.locked::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 0;
+      background: #333;
+      color: #fff;
+      padding: 5px;
+      border-radius: 5px;
+      white-space: pre;
+      font-size: 0.75em;
+      display: none;
+    }
+    .subject.locked:hover::after {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h1>Malla Curricular Interactiva - QFB BUAP</h1>
+  <div class="grid" id="malla"></div>
 
-      // NOVENO SEMESTRE
-      'ISQF 201': { nombre: 'Inocuidad Microbiana de los Alimentos', tipo: 'tipo-integradora', semestre: 9 },
-      'ISQF 200': { nombre: 'Biotecnología', tipo: 'tipo-integradora', semestre: 9 },
-      'SSQF 100': { nombre: 'Servicio Social', tipo: 'tipo-practica', semestre: 9 },
-      'QFBS 258': { nombre: 'Tecnología de los Alimentos', tipo: 'tipo-formativa', semestre: 9 },
-      'QFBS 280': { nombre: 'Sistemas de Calidad y Normatividad', tipo: 'tipo-formativa', semestre: 9 },
-      'OPT IV': { nombre: 'Optativa IV', tipo: 'tipo-formativa', semestre: 9 },
-      'QFBS 279': { nombre: 'Garantía de Calidad', tipo: 'tipo-formativa', semestre: 9, prereq: ['QFBS 278'] },
+  <script>
+    const materias = [
+      {
+        semestre: "1° semestre",
+        materias: [
+          { nombre: "Química General I", codigo: "QFBS 004", creditos: 6, tipo: "basica" },
+          { nombre: "Herramientas Computacionales", codigo: "QFBS 006", creditos: 6, tipo: "basica" },
+          { nombre: "Física", codigo: "QFBS 003", creditos: 8, tipo: "basica" },
+          { nombre: "Cálculo I", codigo: "QFBS 002", creditos: 4, tipo: "basica" },
+          { nombre: "Matemáticas", codigo: "QFBS 001", creditos: 4, tipo: "basica" },
+          { nombre: "Seguridad en Laboratorios", codigo: "QFBS 005", creditos: 3, tipo: "basica" },
+          { nombre: "Lengua Extranjera I", codigo: "FGUS 004", creditos: 4, tipo: "general" },
+          { nombre: "Formación Humana y Social", codigo: "FGUS 001", creditos: 4, tipo: "general" },
+        ]
+      },
+      {
+        semestre: "2° semestre",
+        materias: [
+          { nombre: "Química General II", codigo: "QFBS 008", creditos: 6, tipo: "basica" },
+          { nombre: "Biología Molecular de la Célula", codigo: "QFBS 011", creditos: 7, tipo: "basica" },
+          { nombre: "Fisicoquímica I", codigo: "QFBS 010", creditos: 7, tipo: "basica" },
+          { nombre: "Cálculo II", codigo: "QFBS 007", creditos: 4, tipo: "basica", prerequisitos: ["QFBS 002"] },
+          { nombre: "Química Analítica Básica", codigo: "QFBS 009", creditos: 8, tipo: "basica" },
+          { nombre: "Bioética de la Investigación en Seres Vivos", codigo: "QFBS 012", creditos: 2, tipo: "basica" },
+          { nombre: "Lengua Extranjera II", codigo: "FGUS 005", creditos: 4, tipo: "general", prerequisitos: ["FGUS 004"] },
+          { nombre: "Desarrollo de Habilidades del Pensamiento Complejo", codigo: "FGUS 002", creditos: 4, tipo: "general" },
+        ]
+      }
+    ];
 
-      // DÉCIMO SEMESTRE
-      'PPQF 101': { nombre: 'Práctica Profesional', tipo: 'tipo-practica', semestre: 10, prereq: ['SSQF 100'] },
-      'QFBS 281': { nombre: 'Metodología de la Investigación en Seres Vivos', tipo: 'tipo-formativa', semestre: 10 },
-      'QFBS 259': { nombre: 'Conservación de los Alimentos', tipo: 'tipo-formativa', semestre: 10 },
-      'OPT V': { nombre: 'Optativa V', tipo: 'tipo-formativa', semestre: 10 }
+    const completadas = JSON.parse(localStorage.getItem('materias_aprobadas') || '[]');
+
+    function renderMalla() {
+      const contenedor = document.getElementById('malla');
+      contenedor.innerHTML = '';
+
+      materias.forEach(sem => {
+        const divSem = document.createElement('div');
+        divSem.className = 'semester';
+        divSem.innerHTML = `<h2>${sem.semestre}</h2>`;
+
+        sem.materias.forEach(mat => {
+          const div = document.createElement('div');
+          div.className = 'subject';
+          div.textContent = `${mat.nombre} (${mat.codigo})`;
+          div.setAttribute('data-type', mat.tipo);
+          if (completadas.includes(mat.codigo)) div.classList.add('completed');
+
+          if (mat.prerequisitos) {
+            const faltan = mat.prerequisitos.filter(pr => !completadas.includes(pr));
+            if (faltan.length > 0) {
+              div.classList.add('locked');
+              div.setAttribute('data-tooltip', 'Faltan:
+' + faltan.join('\n'));
+            }
+          }
+
+          div.onclick = () => {
+            if (div.classList.contains('locked')) return;
+            div.classList.toggle('completed');
+            if (div.classList.contains('completed')) {
+              completadas.push(mat.codigo);
+            } else {
+              const i = completadas.indexOf(mat.codigo);
+              if (i >= 0) completadas.splice(i, 1);
+            }
+            localStorage.setItem('materias_aprobadas', JSON.stringify(completadas));
+            renderMalla();
+          };
+
+          divSem.appendChild(div);
+        });
+        contenedor.appendChild(divSem);
+      });
+    }
+
+    renderMalla();
+  </script>
+</body>
+</html>
